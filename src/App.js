@@ -4,7 +4,7 @@ import Timer from './components/Timer/Timer'
 import { useState, useEffect } from 'react';
 import { io } from 'socket.io-client'
 let socket
-socket = io('http://localhost:3000')
+socket = io()
 
 const App = () => {
   const [showChessboard, setShowChessBoard] = useState(false)

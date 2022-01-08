@@ -5,9 +5,9 @@ var http = require('http').Server(app);
 const users = {}  // userName: {room, socket} // name, room, socket };
 const rooms = {}; // roomName {userList}
 var io = require('socket.io')(http, {
-  cors: {
-    origin: ['http://localhost:5000'],
-  },
+  // cors: {
+  //   origin: ['http://localhost:5000'],
+  // },
 })
 const port = process.env.PORT || 3000
 
