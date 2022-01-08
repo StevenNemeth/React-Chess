@@ -8,17 +8,11 @@ import { merge } from 'lodash'
 //Checkmate - loop through all the pieces, if no valid moves then that color loses / checkmate DONE
 //Castling - DONE
 //Stalemate - loop through all the pieces, if no valid moves AND not in check tie / stalemate - DONE
+//add timer - DONE
 
 //add sockets for multiplayer
-//add timer
+// replace alert box
 //
-
-// step for writing is in check
-// get the color of last moved piece
-// get opposite color's king
-// get opposite color's king location
-// loop through boardState
-// check if the boardState of lastmovePiece are attacking opposite king's location using isValidMove
 
 const tileIsOccupied = (x, y, boardState) => {
   const movedPiece = boardState.find((p) => p.x === x && p.y === y)

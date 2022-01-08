@@ -1,15 +1,27 @@
 import { useState, useEffect } from "react"
-
-const Timer = () => {
+const Timer = ({ turn, lastMove }) => {
 
   const [whiteTimer, setWhiteTimer] = useState(600)
   const [blackTimer, setBlackTimer] = useState(600)
-  let displayedTimeWhite = Math.floor(whiteTimer / 60) + ':' +('0'+Math.floor(whiteTimer % 60)).slice(-2)
-  let displayedTimeBlack = Math.floor(blackTimer / 60) + ':' +('0'+Math.floor(blackTimer % 60)).slice(-2)
+  let displayedTimeWhite = Math.floor(whiteTimer / 60) + ':' + ('0' + Math.floor(whiteTimer % 60)).slice(-2)
+  let displayedTimeBlack = Math.floor(blackTimer / 60) + ':' + ('0' + Math.floor(blackTimer % 60)).slice(-2)
 
-  // useEffect(() => {
-  //   whiteTimer > 0 && setTimeout(() => setWhiteTimer(whiteTimer - 1), 1000);
-  // }, [whiteTimer]);
+  useEffect(() => {
+    if (whiteTimer <= 0) {
+      window.alert(`${turn === 'white' ? 'black' : 'white'} wins on time!!`)
+    }
+    if (blackTimer <= 0) {
+      window.alert(`${turn === 'black' ? 'white' : 'black'} wins on time!!`)
+    }
+    if (lastMove) {
+      if (whiteTimer > 0 && turn === 'white') {
+        setTimeout(() => setWhiteTimer(whiteTimer - .1), 100);
+      }
+      if (blackTimer > 0 && turn === 'black') {
+        setTimeout(() => setBlackTimer(blackTimer - .1), 100);
+      }
+    }
+  }, [whiteTimer, blackTimer, turn]);
 
   return (
     <div>

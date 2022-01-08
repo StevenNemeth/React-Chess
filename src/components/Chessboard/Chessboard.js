@@ -1,5 +1,6 @@
 import './Chessboard.css'
 import Tile from '../Tile/Tile'
+import Timer from '../Timer/Timer'
 import Referee from '../../referee/Referee'
 import React from 'react'
 import { merge } from 'lodash'
@@ -35,30 +36,56 @@ initialBoardState.push({ image: 'assets/images/bishop_w.png', x: 5, y: 0, type: 
 initialBoardState.push({ image: 'assets/images/bishop_w.png', x: 2, y: 0, type: 'bishop-white-2', legalMove: [] })
 initialBoardState.push({ image: 'assets/images/queen_w.png', x: 3, y: 0, type: 'queen-white', legalMove: [] })
 initialBoardState.push({ image: 'assets/images/king_w.png', x: 4, y: 0, type: 'king-white', legalMove: [], canCastle: true })
-const Chessboard = () => {
+const Chessboard = ({ team, socket, userName, roomName }) => {
   const chessboardRef = useRef(null)
   const [activePiece, setActivePiece] = useState(null)
   const [lastMovePiece, setLastMovePiece] = useState(null)
   const [lastMove, setLastMove] = useState(null)
   const [piece, setPiece] = useState(initialBoardState)
-  const [turn, setTurn] = useState('black')
+  const [turn, setTurn] = useState('white')
   const [gridX, setGridX] = useState(0)
   const [gridY, setGridY] = useState(0)
   const [legalMoves, setLegalMoves] = useState([])
   const [totalLegalTeamMoves, setTotalLegalTeamMoves] = useState(20)
 
-  useEffect(() => {
-    setTurn(turn === 'white' ? 'black' : 'white')
+  // useEffect(() => {
+  //   setTurn(turn === 'white' ? 'black' : 'white')
 
-  }, [lastMovePiece])
+  // }, [lastMovePiece])
+
+
+  useEffect(() => {
+    socket.on('updateBoardState', (data) => {
+      setPiece(data.boardState)
+      setTurn(data.currentTurn)
+      console.log(socket, userName, roomName)
+      // console.log(data.lastMovePiece, 'updatebaordstate data')
+    })
+    socket.on('updateLastMovePiece', (data) => {
+      setLastMovePiece(data.lastMovePiece)
+      setLastMove(data.lastMove)
+    })
+    socket.on('winLoseTieResult', (data) => {
+      window.alert(data.result)
+    })
+  }, [])
 
   useEffect(() => {
     let opposingTeamColor = turn === 'white' ? 'black' : 'white'
     if (totalLegalTeamMoves === 0 && Referee.isInCheck(piece, null, null, opposingTeamColor)) {
-      window.alert(`CheckMate!! ${turn} Wins!!`)
+      socket.emit('winLoseTie', {                 
+        result: `CheckMate!! ${turn} Wins!!`,        
+        roomName: roomName
+      })
+      // window.alert(`CheckMate!! ${turn} Wins!!`)
     }
     if (totalLegalTeamMoves === 0 && !Referee.isInCheck(piece, null, null, opposingTeamColor)) {
-      window.alert('Stalemate!! its a Draw!')
+      socket.emit('winLoseTie', {                 
+        result: 'Stalemate!! its a Draw!',        
+        roomName: roomName
+      })
+
+      // window.alert('Stalemate!! its a Draw!')
     }
 
 
@@ -79,11 +106,11 @@ const Chessboard = () => {
     })
   }
 
-  const findRook1 = piece.findIndex((element) => {     
-      return element.type === `rook-${turn}-1`
+  const findRook1 = piece.findIndex((element) => {
+    return element.type === `rook-${turn}-1`
   })
-  const findRook2 = piece.findIndex((element) => {     
-      return element.type === `rook-${turn}-2`
+  const findRook2 = piece.findIndex((element) => {
+    return element.type === `rook-${turn}-2`
   })
 
   const updateLegalMoves = (newLastMove) => {
@@ -302,12 +329,17 @@ const Chessboard = () => {
     })
     setTotalLegalTeamMoves(legalMoveCount)
     setPiece(tempPiece)
+    socket.emit('boardState', {
+      boardState: tempPiece,
+      lastMove: team,      
+      roomName: roomName
+    })
   }
 
   const grabPiece = (e) => {
     const element = e.target
     const chessboard = chessboardRef.current
-    if (e.target.className === 'chess-piece' && e.target.id.includes(turn) && chessboard) {
+    if (e.target.className === 'chess-piece' && e.target.id.includes(team) && e.target.id.includes(turn) && chessboard) {
       const currentPiece = piece.find((elem) => {
         return elem.type === element.id
 
@@ -369,12 +401,19 @@ const Chessboard = () => {
       const currentPiece = piece.find((p) => p.x === gridX && p.y === gridY)
       const attackedPiece = piece.find((p) => p.x === x && p.y === y)
 
+      const validMove = Referee.isValidMove(gridX, gridY, x, y, activePiece.id, piece, attackedPiece, currentPiece, lastMovePiece, lastMove)
+      console.log(Referee.isValidMove(gridX, gridY, x, y, activePiece.id, piece, attackedPiece, currentPiece, lastMovePiece, lastMove))
       if (currentPiece) {
 
-        const validMove = Referee.isValidMove(gridX, gridY, x, y, activePiece.id, piece, attackedPiece, currentPiece, lastMovePiece, lastMove)
         if (validMove) {
           setLastMovePiece(activePiece.id)
           setLastMove({ startX: gridX, startY: gridY, endX: x, endY: y })
+          socket.emit('lastMovePiece', {                 
+            lastMovePiece: activePiece.id,
+            lastMove: { startX: gridX, startY: gridY, endX: x, endY: y },
+            roomName: roomName
+          })
+
           currentPiece.hasMoved = true
         }
         if (validMove && attackedPiece) {
@@ -401,8 +440,11 @@ const Chessboard = () => {
           }
 
         }
+
+
         //en pessant
         else if (validMove && currentPiece.type.includes('pawn') && gridX - x === 1 && getAdjacentPieceLeft(gridX, gridY, piece).type === lastMovePiece && lastMovePiece.includes('pawn')) {
+          console.log(lastMovePiece, 'lastmfsefse')
           for (let i = 0; i < piece.length; i++) {
             if (piece[i].type === lastMovePiece) {
               piece.splice(i, 1)
@@ -417,6 +459,7 @@ const Chessboard = () => {
             }
           }
         }
+    
         else {
           //INVALID MOVE
           activePiece.style.position = 'relative'
@@ -445,7 +488,7 @@ const Chessboard = () => {
 
           }
           return p
-        })        
+        })
         setPiece(pieces)
         Referee.isInCheck(piece, activePiece.id, lastMove)
       }
@@ -464,7 +507,10 @@ const Chessboard = () => {
 
       })
       setLegalMoves([])
-      updateLegalMoves({ startX: gridX, startY: gridY, endX: x, endY: y })
+      if(validMove){
+        updateLegalMoves({ startX: gridX, startY: gridY, endX: x, endY: y })
+
+      }
       setActivePiece(null)
     }
   }
@@ -489,13 +535,16 @@ const Chessboard = () => {
     }
   }
   return (
-    <div
-      onMouseDown={e => grabPiece(e)}
-      onMouseMove={e => movePiece(e)}
-      onMouseUp={e => dropPiece(e, lastMove, lastMovePiece, piece)}
-      ref={chessboardRef}
-      id='chessboard'
-    >{board}</div>
+    <>
+      <Timer lastMove={lastMove} turn={turn} />
+      <div
+        onMouseDown={e => grabPiece(e)}
+        onMouseMove={e => movePiece(e)}
+        onMouseUp={e => dropPiece(e, lastMove, lastMovePiece, piece)}
+        ref={chessboardRef}
+        id='chessboard'
+      >{board}</div>
+    </>
   )
 }
 
