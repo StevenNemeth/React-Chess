@@ -11,11 +11,14 @@ var io = require('socket.io')(http, {
 })
 const port = process.env.PORT || 3000
 
-app.use(express.static('./../../'))
+app.use(express.static(path.resolve(__dirname, './../../build')));
 
-app.get("/live", (req, res) => {
-  console.log('get')
- res.sendFile(path.join(__dirname, "../../build/", "index.html"));
+app.get("/", (req, res) => {
+ res.sendFile(path.join(__dirname, "./../../build/", "index.html"));
+});
+
+app.get("/health", (req, res) => {
+ res.send('this is alive');
 });
 
 http.listen(port, function () {
