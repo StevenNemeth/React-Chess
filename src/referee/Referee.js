@@ -12,7 +12,7 @@ import { merge } from 'lodash'
 
 //add sockets for multiplayer
 // replace alert box
-//
+
 
 const tileIsOccupied = (x, y, boardState) => {
   const movedPiece = boardState.find((p) => p.x === x && p.y === y)
