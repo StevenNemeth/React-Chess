@@ -91,20 +91,6 @@ const Chessboard = ({ team, socket, userName, roomName }) => {
 
   }, [totalLegalTeamMoves])
 
-  const checkMate = () => {
-    let legalMoveCount = 0
-    const tempBoardState = merge([], piece)
-    let opposingTeamColor = turn === 'white' ? 'black' : 'white'
-    // console.log(opposingTeamColor, turn)
-    tempBoardState.forEach((element) => {
-      if (element.type.includes(opposingTeamColor)) {
-        if (element.legalMove) {
-          legalMoveCount += element.legalMove.length
-        }
-
-      }
-    })
-  }
 
   const findRook1 = piece.findIndex((element) => {
     return element.type === `rook-${turn}-1`

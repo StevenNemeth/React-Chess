@@ -1,4 +1,3 @@
-import Piece from '../components/Chessboard/Chessboard'
 import { merge } from 'lodash'
 
 //Things to add
@@ -35,13 +34,9 @@ const tileIsEmptyOrOccupiedByOpponent = (x, y, boardState, team) => {
     !tileIsOccupied(x, y, boardState) || tileIsOccupiedByOpponent(x, y, boardState, team)
   )
 }
-const samePosition = (p1, p2) => {
-  return p1.x === p2.x && p1.y === p2.y;
-}
 
 const tileIsOccupiedByOpponent = (x, y, boardState, team) => {
   const piece = boardState.find((p) => p.x === x && p.y === y && !p.type.includes(team))
-
   if (piece) {
     return true
   } else {
@@ -49,19 +44,6 @@ const tileIsOccupiedByOpponent = (x, y, boardState, team) => {
   }
 }
 
-const rowOrColumnIsOccupied = (boardState, x, y, px, py) => {
-  // loop through from x to px
-  // check to see if each tile is occupied
-
-
-
-  for (let i = px + 1; i < x; i++) {
-    if (tileIsOccupied(i, y, boardState)) {
-      return false
-    }
-  }
-  return true
-}
 
 const Referee = {
   isInCheck: (boardState, lastMovePiece, lastMove, teamColor) => {
@@ -77,11 +59,7 @@ const Referee = {
 
     }
     const attackedKingLocation = boardState.filter((element) => {
-
-      if (element.type === `king-${attackedKingColor}`) {
-        return true
-      }
-
+      return element.type === `king-${attackedKingColor}` 
     })[0]
 
     //get the king's location
@@ -248,6 +226,8 @@ const Referee = {
       const findInd = boardState.findIndex((element) => {
         if (currentPiece) {
           return element.type === currentPiece.type
+        } else {
+          return false
         }
       })
       const team = type.includes('white') ? 'white' : 'black'
